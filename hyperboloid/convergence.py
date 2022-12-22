@@ -24,9 +24,9 @@ H = 2*pi/alpha #height of rectangle
 l = sin(theta/2)*L
 
 #Creating mesh
-size_ref = 50 #10 #degub: 5
+#size_ref = 50 #10 #degub: 5
 #mesh = RectangleMesh(size_ref, size_ref, L, H)
-mesh = Mesh('mesh/convergence_2.msh')
+mesh = Mesh('mesh/convergence_4.msh')
 V = VectorFunctionSpace(mesh, "BELL", 5, dim=3)
 PETSc.Sys.Print('Nb dof: %i' % V.dim())
 
@@ -44,6 +44,7 @@ W = VectorFunctionSpace(mesh, 'CG', 4, dim=3)
 phi_l = Function(W, name='solution')
 phi_t = TrialFunction(W)
 psi = TestFunction(W)
+dx = dx(degree=15)
 laplace = inner(grad(phi_t), grad(psi)) * dx #laplace in weak form
 L = inner(Constant((0,0,0)), psi) * dx
 bcs = [DirichletBC(W, phi_D, 1), DirichletBC(W, phi_D, 2), DirichletBC(W, phi_D, 3), DirichletBC(W, phi_D, 4)]
