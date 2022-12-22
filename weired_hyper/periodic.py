@@ -7,11 +7,14 @@ import sys
 
 # the coefficient functions
 def p(phi):
-  aux = 1 / (1 - 0.25 * inner(phi.dx(0), phi.dx(0)))
-  return interpolate(conditional(lt(aux, Constant(1)), Constant(100), aux), UU)
-
+  sq = inner(phi.dx(0), phi.dx(0))
+  aux = 4 / (4 - sq )
+  return conditional(gt(sq, Constant(4)), Constant(100), aux)
+  
 def q(phi):
-  return 4 / inner(phi.dx(1), phi.dx(1))
+  sq = inner(phi.dx(1), phi.dx(1))
+  aux = 4 / sq
+  return conditional(lt(sq, Constant(1)), Constant(4), aux)
 
 def sq_norm(f):
   return inner(f, f)
@@ -48,6 +51,7 @@ phi_old = Function(V) #for iterations
 #Defining the bilinear forms for linearization
 phi_t = TrialFunction(V)
 psi = TestFunction(V)
+dx = dx(degree=5)
 a = inner(p(phi) * phi_t.dx(0).dx(0) + q(phi)*phi_t.dx(1).dx(1), div(grad(psi))) * dx
 
 #penalty to impose Dirichlet BC
@@ -66,26 +70,40 @@ b = assemble(LL)
 solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'})
 PETSc.Sys.Print('Laplace equation ok')
 
-# Picard iterations
-tol = 1e-5 #1e-9
-maxiter = 100
-for iter in range(maxiter):
-  #linear solve
-  A = assemble(a)
-  b = assemble(LL)
-  solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'}) # compute next Picard iterate
-  
-  #convergence test 
-  eps = sqrt(assemble(inner(div(grad(phi-phi_old)), div(grad(phi-phi_old)))*dx)) # check increment size as convergence test
-  PETSc.Sys.Print('iteration{:3d}  H2 seminorm of delta: {:10.2e}'.format(iter+1, eps))
-  if eps < tol:
-    break
-  phi_old.assign(phi)
+#Newton bilinear form
+Gamma = (p(phi) + q(phi)) / (p(phi)*p(phi) + q(phi)*q(phi))
+a = Gamma * inner(p(phi) * phi.dx(0).dx(0) + q(phi)*phi.dx(1).dx(1), div(grad(psi))) * dx
 
-if eps > tol:
-  PETSc.Sys.Print('no convergence after {} Picard iterations'.format(iter+1))
-else:
-  PETSc.Sys.Print('convergence after {} Picard iterations'.format(iter+1))
+#penalty to impose Dirichlet BC
+h = CellDiameter(mesh)
+pen = 1e1 #1e1
+pen_term = pen/h**4 * inner(phi, psi) * ds
+a += pen_term
+a -= LL
+
+# Solving with Newton method
+solve(a == 0, phi, solver_parameters={'snes_monitor': None, 'snes_max_it': 25})
+
+## Picard iterations
+#tol = 1e-5 #1e-9
+#maxiter = 100
+#for iter in range(maxiter):
+#  #linear solve
+#  A = assemble(a)
+#  b = assemble(LL)
+#  solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'}) # compute next Picard iterate
+#  
+#  #convergence test 
+#  eps = sqrt(assemble(inner(div(grad(phi-phi_old)), div(grad(phi-phi_old)))*dx)) # check increment size as convergence test
+#  PETSc.Sys.Print('iteration{:3d}  H2 seminorm of delta: {:10.2e}'.format(iter+1, eps))
+#  if eps < tol:
+#    break
+#  phi_old.assign(phi)
+#
+#if eps > tol:
+#  PETSc.Sys.Print('no convergence after {} Picard iterations'.format(iter+1))
+#else:
+#  PETSc.Sys.Print('convergence after {} Picard iterations'.format(iter+1))
 
 #Write 2d results
 flat = File('flat_%i.pvd' % size_ref)
