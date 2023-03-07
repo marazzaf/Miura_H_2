@@ -146,3 +146,9 @@ file_4.write(proj)
 test = project(div(grad(phi)), W, name='minimal')
 file_6 = File('minimal_bis.pvd')
 file_6.write(test)
+
+#Write 2d result for the grad
+Norm = sqrt(inner(grad(phi), grad(phi)))
+file_bis = File('grad.pvd')
+proj = project(Norm, UU, name='norm grad')
+file_bis.write(proj)
