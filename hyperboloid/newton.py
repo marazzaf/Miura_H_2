@@ -54,7 +54,7 @@ solve(A, phi_l, b, solver_parameters={'direct_solver': 'mumps'})
 PETSc.Sys.Print('Laplace equation ok')
 
 #test
-Norm = sqrt(inner(grad(phi_l), grad(phi_l)))
+Norm = sqrt(inner(grad(phi_D), grad(phi_D)))
 file_bis = File('grad.pvd')
 proj = project(Norm, UU, name='norm grad')
 file_bis.write(proj)
@@ -93,10 +93,3 @@ x = SpatialCoordinate(mesh)
 projected = Function(U, name='surface')
 projected.interpolate(phi - as_vector((x[0], x[1], 0)))
 file.write(projected)
-
-#Write 2d result for the grad
-Norm = sqrt(inner(grad(phi), grad(phi)))
-file_bis = File('grad_2.pvd')
-proj = project(Norm, UU, name='norm grad')
-file_bis.write(proj)
-

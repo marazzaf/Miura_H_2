@@ -65,6 +65,12 @@ b = assemble(L)
 solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'})
 PETSc.Sys.Print('Laplace equation ok')
 
+#test
+Norm = sqrt(inner(grad(phi), grad(phi)))
+file_bis = File('grad.pvd')
+proj = project(Norm, UU, name='norm grad')
+file_bis.write(proj)
+
 #testing bounded slope condition of initial guess
 test = project(sq_norm(phi.dx(0)), UU)
 with test.dat.vec_ro as v:
@@ -135,3 +141,9 @@ file_ter.write(proj)
 file_4 = File('verif_prod.pvd')
 proj = project(inner(phi_x,phi_y), UU, name='test PS')
 file_4.write(proj)
+
+#test
+Norm = sqrt(inner(grad(phi), grad(phi)))
+file_bis = File('grad_2.pvd')
+proj = project(Norm, UU, name='norm grad')
+file_bis.write(proj)
