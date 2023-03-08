@@ -51,18 +51,6 @@ BpA = BpC + Constant((-L, H, 0))
 phi_D2 = (1-x[0]/L)*BpA + (1-x[1]/H)*BpC + OBp
 phi_D2 *= beta
 
-##test BC
-#f = Function(U)
-#f.interpolate(phi_D1)
-#file = File('test.pvd')
-#file.write(f)
-##file.write(project(f- as_vector((x[0], x[1], 0)), U))
-#file_3 = File('surf.pvd')
-#f.interpolate(phi_D2)
-#file_3.write(f)
-##file_3.write(project(f- as_vector((x[0], x[1], 0)), U))
-#sys.exit()
-
 # Creating function to store solution
 phi = Function(V, name='solution')
 phi_old = Function(V) #for iterations
@@ -90,6 +78,12 @@ A = assemble(laplace+pen_term)
 b = assemble(L)
 solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'})
 PETSc.Sys.Print('Laplace equation ok')
+
+#test
+Norm = sqrt(inner(grad(phi), grad(phi)))
+file_bis = File('grad.pvd')
+proj = project(Norm, UU, name='norm grad')
+file_bis.write(proj)
 
 #test
 eps = sqrt(assemble(inner(div(grad(phi-phi_old)), div(grad(phi-phi_old)))*dx)) # check increment size as convergence test
