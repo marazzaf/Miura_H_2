@@ -66,26 +66,17 @@ b = assemble(LL)
 solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'})
 PETSc.Sys.Print('Laplace equation ok')
 
-# Picard iterations
-tol = 1e-5 #1e-9
-maxiter = 100
-for iter in range(maxiter):
-  #linear solve
-  A = assemble(a)
-  b = assemble(LL)
-  solve(A, phi, b, solver_parameters={'direct_solver': 'mumps'}) # compute next Picard iterate
-  
-  #convergence test 
-  eps = sqrt(assemble(inner(div(grad(phi-phi_old)), div(grad(phi-phi_old)))*dx)) # check increment size as convergence test
-  PETSc.Sys.Print('iteration{:3d}  H2 seminorm of delta: {:10.2e}'.format(iter+1, eps))
-  if eps < tol:
-    break
-  phi_old.assign(phi)
+#Newton bilinear form
+Gamma = (p(phi) + q(phi)) / (p(phi)*p(phi) + q(phi)*q(phi))
+a = Gamma * inner(p(phi) * phi.dx(0).dx(0) + q(phi)*phi.dx(1).dx(1), div(grad(psi))) * dx
 
-if eps > tol:
-  PETSc.Sys.Print('no convergence after {} Picard iterations'.format(iter+1))
-else:
-  PETSc.Sys.Print('convergence after {} Picard iterations'.format(iter+1))
+#penalty to impose Dirichlet BC
+pen_term = pen/h**4 * inner(phi, psi) * ds
+a += pen_term
+a -= LL
+
+# Solving with Newton method
+solve(a == 0, phi, solver_parameters={'snes_monitor': None, 'snes_max_it': 25})
 
 #Write 2d results
 flat = File('flat_%i.pvd' % size_ref)
@@ -106,6 +97,12 @@ file_ter.write(proj)
 file_4 = File('verif_prod.pvd')
 proj = project(inner(phi_x,phi_y), UU, name='test PS')
 file_4.write(proj)
+
+#test
+Norm = sqrt(inner(grad(phi), grad(phi)))
+file_bis = File('grad.pvd')
+proj = project(Norm, UU, name='norm grad')
+file_bis.write(proj)
 
 sys.exit()
 
