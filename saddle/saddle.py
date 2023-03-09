@@ -19,7 +19,7 @@ def sq_norm(f):
 # Create mesh and define function space
 L = 2 #length of rectangle
 H = 1 #height of rectangle #1.2 works #1.3 no
-size_ref = 50 #degub: 2
+size_ref = 20 #degub: 2
 mesh = RectangleMesh(size_ref, size_ref, L, H, diagonal='crossed')
 #mesh = UnitDiskMesh(size_ref)
 V = VectorFunctionSpace(mesh, "BELL", 5, dim=3)
@@ -100,6 +100,12 @@ a -= L
 
 # Solving with Newton method
 solve(a == 0, phi, solver_parameters={'snes_monitor': None, 'snes_max_it': 25})
+
+#test
+Norm = inner(phi.dx(0), phi.dx(0))
+file_bis = File('dx.pvd')
+proj = project(Norm, UU, name='norm dx')
+file_bis.write(proj)
 
 #Write 2d results
 flat = File('flat_%i.pvd' % size_ref)

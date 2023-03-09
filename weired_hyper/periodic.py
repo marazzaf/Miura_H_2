@@ -99,9 +99,9 @@ proj = project(inner(phi_x,phi_y), UU, name='test PS')
 file_4.write(proj)
 
 #test
-Norm = sqrt(inner(grad(phi), grad(phi)))
-file_bis = File('grad.pvd')
-proj = project(Norm, UU, name='norm grad')
+Norm = inner(phi.dx(0), phi.dx(0))
+file_bis = File('dx.pvd')
+proj = project(Norm, UU, name='norm dx')
 file_bis.write(proj)
 
 sys.exit()

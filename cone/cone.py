@@ -81,7 +81,7 @@ a += pen_term
 a -= L
 
 # Solving with Newton method
-solve(a == 0, phi, solver_parameters={'snes_monitor': None, 'snes_max_it': 25}, quadrature_degree=10)
+solve(a == 0, phi, solver_parameters={'snes_monitor': None, 'snes_max_it': 25})
 
 #For projection
 U = VectorFunctionSpace(mesh, 'CG', 4, dim=3)
@@ -112,7 +112,7 @@ proj = project(inner(phi_x,phi_y), UU, name='test PS')
 file_4.write(proj)
 
 #test
-Norm = sqrt(inner(grad(phi), grad(phi)))
-file_bis = File('grad_2.pvd')
-proj = project(Norm, UU, name='norm grad')
+Norm = inner(phi.dx(0), phi.dx(0))
+file_bis = File('dx.pvd')
+proj = project(Norm, UU, name='norm dx')
 file_bis.write(proj)
